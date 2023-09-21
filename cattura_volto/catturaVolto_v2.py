@@ -1,23 +1,59 @@
 import face_recognition
 import cv2
 import numpy as np
+from rembg import remove
+import time
+import os
+import sys
+import subprocess
+
+ATTESA = 5      # secondi
+PRECISIONE = 10  # frame stabili di volto
+DDD = False
+
+def max_number():
+    or_path = os.path.dirname(os.path.realpath(__file__))
+    dir_path = os.path.join(or_path,"volti")
+    files = os.listdir(dir_path)
+
+    numbers = []
+
+    if len(files) == 0:
+        return 0
+
+    for f in files:
+        if f[-4:] == '.png':
+            name = f.split('.')[0]
+            nn = name.split('-')
+            if (len(nn)) == 2:
+                numbers.append(int(nn[1]))
+
+    return max(numbers)
+
 
 # Get a reference to webcam #0 (the default one)
 video_capture = cv2.VideoCapture(0)
 WIDTH = int(video_capture.get(3))
 HEIGTH = int(video_capture.get(4))
 
-
 # Initialize some variables
 face_locations = []
-process_this_frame = False
+process_this_frame = True
 
 edge = 200
+readyIdx = 0
 
-from rembg import remove
+# path
+or_path = os.path.dirname(os.path.realpath(__file__))
+black_path = os.path.join(or_path,"_showBlack.py")
+
+#if not DDD:
+#    subprocess.Popen(["python3",black_path])
+
 
 
 while True:
+
 
     ret, frame = video_capture.read()
 
@@ -30,6 +66,14 @@ while True:
         face_locations = face_recognition.face_locations(rgb_small_frame)
 
         if (len(face_locations) > 0):
+
+            readyIdx = readyIdx + 1
+        else:
+            readyIdx = 0
+
+        if readyIdx > PRECISIONE:
+            
+            readyIdx = 0
             for (top, right, bottom, left) in face_locations:
                 # Scale back up face locations since the frame we detected in was scaled to 1/4 size
                 top *= 4
@@ -39,11 +83,6 @@ while True:
 
                 cH = int((bottom-top)/2)+top
                 cW = int((right-left)/2)+left
-
-                # Draw a box around the face
-                #cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 1)
-                #cv2.circle(frame, (cW,cH), 2, (0,0,255), 1)
-                cv2.rectangle(frame, (cW-edge, cH-edge), (cW+edge, cH+edge), (0, 255, 0), 1)
 
                 if (cW-edge) < 0:
                     xC = 0
@@ -65,25 +104,36 @@ while True:
                 else:
                     hC = cH+edge
 
-
+            # 1 : taglio il frame
             crop_frame = frame[yC:hC, xC:wC]
+
+            # 2 : rimuovo lo sfondo
             output = remove(crop_frame)
-            cv2.imshow('REC', output)
 
-            process_this_frame = False
-        
+            # 3 : creo il nome
+            dir_path = os.path.join(or_path,"volti")
+            j = max_number() + 1
+            last_name_file = 'face-' + str(j) + '.png'
+            name_file = os.path.join(dir_path,last_name_file)
 
+            # 4 : salvo
+            if not DDD:
+                cv2.imwrite(str(name_file),output)
+                img_path = os.path.join(or_path,"_showImage.py")
+                subprocess.Popen(["python3",img_path,name_file])
+                time.sleep(5)
+            else:
+                cv2.imshow('Video2', output)
 
     # Display the resulting image
-    cv2.imshow('Video', frame)
+    
+    #cv2.imshow('Video', frame)
 
     # Hit 'q' on the keyboard to quit!
     k = cv2.waitKey(1)
 
     if k == ord('q'):
         break
-    elif k == ord('p'):
-        process_this_frame = True
 
 # Release handle to the webcam
 video_capture.release()
