@@ -10,7 +10,7 @@ import subprocess
 
 ATTESA = 5      # secondi
 FRAME_FERMI_SUM = 3000000  # frame stabili di volto
-FRAME_FERMI = 2
+FRAME_FERMI = 1
 DEBUG = False
 BIG_HEIGTH = 1.5
 BIG_WIDTH = 1.2
