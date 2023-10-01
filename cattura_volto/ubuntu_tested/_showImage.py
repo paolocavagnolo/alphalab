@@ -4,6 +4,7 @@ from PIL import Image, ImageTk
 import sys
 import subprocess
 import argparse
+import os
 
 parser = argparse.ArgumentParser()
 parser.add_argument("echo")     # naming it "echo"
@@ -35,6 +36,7 @@ root.focus_set()
 root.config(cursor="none")
 root.bind("<Escape>", lambda e: root.destroy())
 root.after(5000,lambda:root.withdraw())
+root.after(5050,lambda:os.remove(image_path))
 root.after(5100,lambda:root.destroy())
 
 canvas = Canvas(root,width=w,height=h,highlightthickness=0)
@@ -47,7 +49,7 @@ if imgWidth > w or imgHeight > h:
     ratio = min(w/imgWidth, h/imgHeight)
     imgWidth = int(imgWidth*ratio)
     imgHeight = int(imgHeight*ratio)
-    pilImage = pilImage.resize((imgWidth,imgHeight), Image.ANTIALIAS)
+    pilImage = pilImage.resize((imgWidth,imgHeight), Image.LANCZOS)
 
 image = ImageTk.PhotoImage(pilImage)
 imagesprite = canvas.create_image(w/2,h/2,image=image)
