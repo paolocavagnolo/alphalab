@@ -21,8 +21,8 @@ pilImage = Image.open(image_path)
 height = pilImage.size[1]
 width = pilImage.size[0]
 
-new_height = 1300
-new_width  = int(new_height * width / height)
+new_width = 1080
+new_height  = int(new_width * height / width)
 
 pilImage = pilImage.resize((new_width, new_height), Image.LANCZOS)
 
